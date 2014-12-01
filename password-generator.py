@@ -35,7 +35,7 @@ import copy
 ############ SETTINGS ###############
 
 #If splitting seed into pieces, this is the maximum amount of pieces to split into
-MAX_PARTIAL_PIECES = 3
+MAX_PIECES = 3
 
 #Mapping table for leetspeak replacement algorithm
 leet_mappings = \
@@ -160,10 +160,10 @@ def split_in_two(str):
 """
 Split strings into all possible pieces as a list of lists without affecting the order of characters.
 
-if MAX_PARTIAL_PIECES is set, this is the maximum amount of pieces returned
+if MAX_PIECES is set, this is the maximum amount of pieces returned
 
 if
-    MAX_PARTIAL_PIECES = 2
+    MAX_PIECES = 2
 
 "root" -> [["r", "oot"], ["ro", "ot"], ["roo", "t"]]
 """
@@ -172,7 +172,7 @@ if
 def get_pieces(str):
     results = []
     prev_iter = [[str]]
-    for i in range(2, min(MAX_PARTIAL_PIECES, len(str)) + 1):
+    for i in range(2, min(MAX_PIECES, len(str)) + 1):
         curr_iter = []
         for prev in prev_iter:
 
@@ -220,7 +220,8 @@ seed = args.seed
 
 ########### SCRIPT LOGIC #########
 
-generated = [] #Keep track of generated passwords to avoid printing dupes
+#Keep track of generated passwords to avoid printing dupes
+generated = []
 algorithms = [alg_reverse, alg_shift, alg_flip_case, alg_leet_replace]
 
 #Unaltered
@@ -231,32 +232,22 @@ add(run_algorithms(seed, algorithms))
 
 #Split into pieces and run each algorithm on the different pieces selectively
 results = []
-for partial_list in get_pieces(seed):
-    candidates = partial_list
+for pieces in get_pieces(seed):
+    #remember all generated prefixes and apply the
+    prefixes = [""]
 
-    for i in range(0, len(candidates)):
+    for i in range(0, len(pieces)):
         #Run algorithm on part i
-        candidate = candidates[i]
-        outputs = run_algorithms(candidate, algorithms)
-        prefix = []
-        if i > 0:
-            prefix = candidates[:i]
+        piece = pieces[i]
+        outputs = run_algorithms(piece, algorithms)
 
         suffix = []
-        if i < len(candidates):
-            suffix = candidates[i+1:len(candidates)]
+        if i < len(pieces):
+            suffix = pieces[i+1:len(pieces)]
 
+        prefixes_copy = copy.copy(prefixes)
+        prefixes = []
         for output in outputs:
-            results.append(prefix + [output] + suffix)
-
-
-for result in results:
-    add("".join(result))
-
-
-
-
-
-
-
-
+            for prefix in prefixes_copy:
+                add("".join([prefix] + [output] + suffix))
+                prefixes.append("".join(prefix + output))
